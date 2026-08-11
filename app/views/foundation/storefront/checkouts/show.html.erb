@@ -5,7 +5,7 @@
     <%= button_to "Retry secure checkout", storefront_checkout_retry_path, class: "md-button md-button--filled" %>
     <%= link_to "View order status", storefront_order_path(@pending_order.public_reference, access_token: @pending_token), class: "md-button md-button--outlined" %>
   <% else %>
-  <div><p class="md-section__eyebrow">Secure checkout</p><h1>Contact and consent</h1><p>This storefront is for digital goods; no shipping address is collected. Payment details are collected by Stripe. This application never receives or stores your card number or security code.</p></div>
+  <div><p class="md-section__eyebrow">Secure checkout</p><h1>Contact, shipping, and consent</h1><p>Your coffee ships to the address below. Payment details are collected by Stripe; this application never receives or stores your card number or security code.</p></div>
   <% if flash[:alert].present? %><div class="md-card md-card--filled" role="alert"><%= flash[:alert] %></div><% end %>
   <%= form_with scope: :checkout, url: storefront_checkout_path, class: "md-stack" do |form| %>
     <% if user_signed_in? %>
@@ -14,6 +14,31 @@
       <div class="md-field"><%= form.label :email, "Email for receipt and order updates" %><%= form.email_field :email, required: true, autocomplete: "email", maxlength: 254 %></div>
       <p>No account is required. We never attach an order to an account by matching its email.</p>
     <% end %>
+
+    <fieldset class="md-card md-card--outlined md-stack">
+      <legend><h2>Shipping address</h2></legend>
+      <div class="md-field"><%= form.label "shipping_address[name]", "Name" %><%= form.text_field "shipping_address[name]", required: true, autocomplete: "name", maxlength: 120 %></div>
+      <div class="md-field"><%= form.label "shipping_address[line1]", "Address" %><%= form.text_field "shipping_address[line1]", required: true, autocomplete: "address-line1", maxlength: 160 %></div>
+      <div class="md-field"><%= form.label "shipping_address[line2]", "Apartment, suite, etc. (optional)" %><%= form.text_field "shipping_address[line2]", autocomplete: "address-line2", maxlength: 160 %></div>
+      <div class="md-field"><%= form.label "shipping_address[city]", "City" %><%= form.text_field "shipping_address[city]", required: true, autocomplete: "address-level2", maxlength: 120 %></div>
+      <div class="md-field"><%= form.label "shipping_address[region]", "State / region (optional)" %><%= form.text_field "shipping_address[region]", autocomplete: "address-level1", maxlength: 120 %></div>
+      <div class="md-field"><%= form.label "shipping_address[postal_code]", "Postal code" %><%= form.text_field "shipping_address[postal_code]", required: true, autocomplete: "postal-code", maxlength: 20 %></div>
+      <div class="md-field"><%= form.label "shipping_address[country]", "Country" %><%= form.select "shipping_address[country]", [%w[United\ States US], %w[Canada CA], %w[Mexico MX]], { include_blank: "Select a country" }, required: true %></div>
+    </fieldset>
+
+    <fieldset class="md-card md-card--outlined md-stack">
+      <legend><h2>Shipping method</h2></legend>
+      <div class="md-choice-group">
+        <% Foundation::Storefront::Shipping::METHODS.each do |method, info| %>
+          <label class="md-choice">
+            <%= form.radio_button :shipping_method, method, checked: method == "standard" %>
+            <span class="md-choice__control" aria-hidden="true"></span>
+            <span><strong><%= info[:label] %></strong> — <%= storefront_money(info[:cents], "USD") %></span>
+          </label>
+        <% end %>
+      </div>
+    </fieldset>
+
     <%# The control span is what is actually visible: the real input is reduced
         to 1px and transparent by the design system, so omitting it here left a
         required checkbox with nothing to tick. Mirrors components/_choice,
