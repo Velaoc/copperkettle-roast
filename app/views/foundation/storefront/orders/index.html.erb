@@ -1,0 +1,24 @@
+<% title "Your orders" %>
+<section class="md-section"><div class="md-page md-page--narrow md-stack">
+  <div><p class="md-section__eyebrow">Account</p><h1>Your orders</h1><p>Every order placed from your account, newest first.</p></div>
+  <% if @orders.any? %>
+    <div class="md-stack">
+      <% @orders.each do |order| %>
+        <%= link_to storefront_order_path(order.public_reference, access_token: @tokens.fetch(order)), class: "md-card md-card--outlined md-card--link" do %>
+          <div class="storefront-order-row">
+            <div>
+              <strong><%= order.public_reference %></strong>
+              <p><%= l(order.created_at, format: :long) %> · <%= order.line_items.sum(&:quantity) %> items</p>
+            </div>
+            <div class="storefront-order-row__right">
+              <span class="md-chip <%= "selected" if %w[paid fulfilled].include?(order.state) %>"><%= order.state.humanize %></span>
+              <strong><%= storefront_money(order.total_cents, order.currency) %></strong>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="md-card md-card--filled"><h2>No orders yet</h2><p>Once you check out, your orders will appear here.</p><%= link_to "Browse the shop", storefront_products_path, class: "md-button md-button--filled" %></div>
+  <% end %>
+</div></section>
