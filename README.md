@@ -50,6 +50,8 @@ Requires Ruby, PostgreSQL, and the usual Rails toolchain. See `bin/setup` if pre
 
 Five roasts (light to dark) with photos, prices, roast level and origin; a sample past order for the demo customer so order history is visible.
 
+Demo customer (preview only): **ava@example.com** / **copperkettle-demo-1** — sign in to see order history.
+
 ## Deploy notes
 
 Production `config.hosts` is derived from `domain` in `config/foundation.yml`. Keep that value aligned with the real host or every request will 403.
