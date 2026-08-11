@@ -30,9 +30,12 @@ module Foundation
       validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }, length: { maximum: 254 }
       validates :state, inclusion: { in: STATES }
       validates :currency, format: { with: /\A[A-Z]{3}\z/ }
-      validates :subtotal_cents, :total_cents,
+      validates :subtotal_cents, :total_cents, :shipping_cents,
         numericality: { only_integer: true, greater_than_or_equal_to: 0 }
       validates :terms_version, :privacy_version, :legal_accepted_at, :reservation_expires_at, presence: true
+      validates :shipping_method, inclusion: { in: %w[standard roasters-choice] }
+      validates :shipping_country, allow_nil: true, format: { with: /\A[A-Z]{2}\z/ }
+      validate :shipping_address_complete_when_present
       validates :stripe_session_id, :provider_payment_id, uniqueness: true, allow_nil: true
       validate :totals_match
 
@@ -62,7 +65,19 @@ module Foundation
       end
 
       def totals_match
-        errors.add(:total_cents, "must equal subtotal") unless total_cents == subtotal_cents
+        errors.add(:total_cents, "must equal subtotal plus shipping") unless total_cents == subtotal_cents + shipping_cents
+      end
+
+      def shipping_address_complete_when_present
+        fields = [ shipping_name, shipping_line1, shipping_city, shipping_country ]
+        present = fields.any?(&:present?)
+        return unless present
+
+        missing = {
+          "shipping name" => shipping_name, "shipping address" => shipping_line1,
+          "shipping city" => shipping_city, "shipping country" => shipping_country
+        }.select { |_label, value| value.blank? }
+        missing.each_key { |label| errors.add(:base, "#{label.humanize} is required for shipping") }
       end
     end
   end
