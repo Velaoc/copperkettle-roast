@@ -22,6 +22,9 @@ module Foundation
       validates :sku, format: { with: /\A[A-Z0-9][A-Z0-9._-]*\z/ }, uniqueness: true
       validates :price_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 999_999_999 }
       validates :inventory_quantity, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 1_000_000 }
+      validates :weight_grams, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 100_000 }, allow_nil: true
+      validates :roast_level, length: { maximum: 60 }, allow_nil: true
+      validates :origin, length: { maximum: 120 }, allow_nil: true
       validates :position, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 1_000_000 }
       validates :currency, format: { with: /\A[A-Z]{3}\z/ }
       validate :safe_external_image_url
@@ -47,6 +50,8 @@ module Foundation
         self.currency = currency.to_s.strip.upcase
         self.description = description.to_s.strip
         self.image_url = image_url.to_s.strip.presence
+        self.roast_level = roast_level.to_s.strip.presence
+        self.origin = origin.to_s.strip.presence
       end
 
       def safe_external_image_url
