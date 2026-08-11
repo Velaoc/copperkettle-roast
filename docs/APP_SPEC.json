@@ -1,0 +1,78 @@
+{
+  "name": "Copperkettle Roast",
+  "purpose": "Online store for a small coffee roaster: browse roasts with photos and prices, add to cart, check out, and let signed-in customers review their past orders.",
+  "actors": [
+    "Customers (guest checkout or signed-in; signed-in customers see past orders)",
+    "Shop admin (manage products, view orders)"
+  ],
+  "entities": [
+    {
+      "name": "Product",
+      "relationships": [
+        "has many OrderItems",
+        "belongs to the catalog with name, description, price, photo, roast level, origin, available flag"
+      ]
+    },
+    {
+      "name": "CartItem",
+      "relationships": [
+        "belongs to a session cart",
+        "references a Product with quantity"
+      ]
+    },
+    {
+      "name": "Order",
+      "relationships": [
+        "belongs to a Customer (or guest email)",
+        "has many OrderItems",
+        "has status and total"
+      ]
+    },
+    {
+      "name": "OrderItem",
+      "relationships": [
+        "belongs to an Order",
+        "snapshots product name, quantity, unit price at purchase"
+      ]
+    },
+    {
+      "name": "Customer",
+      "relationships": [
+        "user account with email",
+        "has many Orders"
+      ]
+    }
+  ],
+  "workflows": [
+    {
+      "name": "Browse catalog",
+      "description": "View roasts with photos, prices, roast level and origin; open a product detail page"
+    },
+    {
+      "name": "Cart",
+      "description": "Add products to a cart, adjust quantities, see the running total"
+    },
+    {
+      "name": "Checkout",
+      "description": "Check out as guest (email only) or signed-in; order goes through the server-authoritative flow with a receipt"
+    },
+    {
+      "name": "Past orders",
+      "description": "Signed-in customers see their order history and order details"
+    },
+    {
+      "name": "Admin",
+      "description": "Admin manages products (add, edit, price, photo, availability) and views orders"
+    }
+  ],
+  "modules": [
+    "storefront"
+  ],
+  "integrations": [
+    {
+      "name": "Stripe",
+      "demo_adapter": true
+    }
+  ],
+  "seed_demo": "Five roasts (light to dark) with photos, prices, roast level and origin; a sample past order for the demo customer so order history is visible."
+}
