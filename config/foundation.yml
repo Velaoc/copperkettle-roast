@@ -47,7 +47,7 @@ shared:
   # limited licenses/capacity. A physical-goods app must first implement
   # address collection, shipping/tax calculation, and matching legal terms;
   # readiness rejects any unimplemented mode instead of silently shipping.
-  storefront_fulfillment_mode: "physical"
+  storefront_fulfillment_mode: "digital"
 
   # A live production storefront refuses readiness until an operator has
   # completed the commerce-specific legal/identity checklist in
