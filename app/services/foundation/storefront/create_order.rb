@@ -7,9 +7,11 @@ module Foundation
       class Unavailable < StandardError; end
       MAX_DISTINCT_ITEMS = 20
 
-      def self.call(cart:, email:, user:, legal_assent:, ip:, user_agent:, checkout_nonce: SecureRandom.urlsafe_base64(32))
+      def self.call(cart:, email:, user:, legal_assent:, ip:, user_agent:, checkout_nonce: SecureRandom.urlsafe_base64(32), shipping_method: Shipping::DEFAULT_METHOD, shipping_address: {})
         raise InvalidCart, "Your cart is empty." if cart.blank?
         raise InvalidCart, "You must accept the Terms and Privacy Policy." unless legal_assent == "1" || legal_assent == true
+
+        raise InvalidCart, "Choose a shipping method." unless Shipping.valid_method?(shipping_method)
 
         checkout_key_digest = checkout_digest(checkout_nonce)
         existing = Order.find_by(checkout_key_digest: checkout_key_digest)
@@ -36,6 +38,7 @@ module Foundation
           end
 
           contact_email = user ? user.email : email
+          shipping = normalize_shipping_address(shipping_address)
           order = Order.new(
             user: user,
             checkout_key_digest: checkout_key_digest,
@@ -43,6 +46,15 @@ module Foundation
             state: "pending",
             currency: currencies.first,
             subtotal_cents: 0,
+            shipping_method: shipping_method,
+            shipping_cents: Shipping.cents_for(shipping_method),
+            shipping_name: shipping[:name],
+            shipping_line1: shipping[:line1],
+            shipping_line2: shipping[:line2],
+            shipping_city: shipping[:city],
+            shipping_region: shipping[:region],
+            shipping_postal_code: shipping[:postal_code],
+            shipping_country: shipping[:country],
             total_cents: 0,
             terms_version: Foundation::Legal::TERMS_VERSION,
             privacy_version: Foundation::Legal::PRIVACY_VERSION,
@@ -65,9 +77,9 @@ module Foundation
               line_total_cents: line_total
             )
             order.subtotal_cents += line_total
-            order.total_cents += line_total
             product.update!(inventory_quantity: product.inventory_quantity - quantity)
           end
+          order.total_cents = order.subtotal_cents + order.shipping_cents
           order.save!
           order
         end
@@ -98,6 +110,12 @@ module Foundation
       def self.checkout_digest(checkout_nonce)
         Digest::SHA256.hexdigest(checkout_nonce.to_s)
       end
+
+      def self.normalize_shipping_address(address)
+        address.to_h.transform_keys(&:to_sym).slice(:name, :line1, :line2, :city, :region, :postal_code, :country)
+          .transform_values { |value| value.to_s.strip.presence }
+      end
+      private_class_method :normalize_shipping_address
     end
   end
 end
